@@ -129,7 +129,7 @@
   )
     (asserts! (>= stake-amount MIN_REVIEW_STAKE) ERR_INSUFFICIENT_STAKE)
     (asserts! (is-some (map-get? papers paper-id)) ERR_PAPER_NOT_FOUND)
-    (asserts! (>= (unwrap-panic (ft-get-balance peer-token tx-sender)) stake-amount) ERR_INSUFFICIENT_BALANCE)
+    (asserts! (>= (ft-get-balance peer-token tx-sender) stake-amount) ERR_INSUFFICIENT_BALANCE)
     
     ;; Transfer stake to contract
     (try! (ft-transfer? peer-token stake-amount tx-sender (as-contract tx-sender)))
