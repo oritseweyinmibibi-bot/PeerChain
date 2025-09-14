@@ -129,7 +129,7 @@
   )
     (asserts! (>= stake-amount MIN_REVIEW_STAKE) ERR_INSUFFICIENT_STAKE)
     (asserts! (is-some (map-get? papers paper-id)) ERR_PAPER_NOT_FOUND)
-    (asserts! (>= (unwrap-panic (ft-get-balance peer-token tx-sender)) stake-amount) ERR_INSUFFICIENT_BALANCE)
+    (asserts! (>= (ft-get-balance peer-token tx-sender) stake-amount) ERR_INSUFFICIENT_BALANCE)
     
     ;; Transfer stake to contract
     (try! (ft-transfer? peer-token stake-amount tx-sender (as-contract tx-sender)))
@@ -251,4 +251,96 @@
     })
     (ok true)
   )
+)
+
+;; read only functions
+
+;; Get paper details
+(define-read-only (get-paper (paper-id uint))
+  (map-get? papers paper-id)
+)
+
+;; Get review details
+(define-read-only (get-review (review-id uint))
+  (map-get? reviews review-id)
+)
+
+;; Get reviewer reputation
+(define-read-only (get-reviewer-reputation (reviewer principal))
+  (map-get? reviewer-reputation reviewer)
+)
+
+;; Get paper reviews
+(define-read-only (get-paper-reviews (paper-id uint))
+  (map-get? paper-reviews paper-id)
+)
+
+;; Get total supply of tokens
+(define-read-only (get-total-supply)
+  (ok (ft-get-supply peer-token))
+)
+
+;; Get token balance
+(define-read-only (get-balance (owner principal))
+  (ok (ft-get-balance peer-token owner))
+)
+
+;; Get citation info
+(define-read-only (get-citation (paper-id uint) (citing-paper-id uint))
+  (map-get? citations {paper-id: paper-id, citing-paper: citing-paper-id})
+)
+
+;; Get journal DAO info
+(define-read-only (get-journal-dao (name (string-ascii 64)))
+  (map-get? journal-daos name)
+)
+
+;; Get contract stats
+(define-read-only (get-contract-stats)
+  {
+    total-papers: (- (var-get next-paper-id) u1),
+    total-reviews: (- (var-get next-review-id) u1),
+    total-citations: (var-get total-citations),
+    total-supply: (ft-get-supply peer-token)
+  }
+)
+
+;; private functions
+
+;; Update reviewer reputation after review finalization
+(define-private (update-reviewer-reputation (reviewer principal) (was-quality bool) (bonus uint))
+  (let ((current-rep (default-to {total-reviews: u0, quality-score: u0, tokens-earned: u0, tokens-staked: u0} 
+                                 (map-get? reviewer-reputation reviewer))))
+    (map-set reviewer-reputation reviewer 
+      (merge current-rep {
+        quality-score: (if was-quality 
+                          (+ (get quality-score current-rep) u1) 
+                          (get quality-score current-rep)),
+        tokens-earned: (+ (get tokens-earned current-rep) bonus)
+      }))
+  )
+)
+
+;; SIP-010 Token Standard Implementation
+(define-public (transfer (amount uint) (sender principal) (recipient principal) (memo (optional (buff 34))))
+  (begin
+    (asserts! (is-eq tx-sender sender) ERR_NOT_AUTHORIZED)
+    (ft-transfer? peer-token amount sender recipient)
+  )
+)
+
+(define-read-only (get-name)
+  (ok "PeerChain Token")
+)
+
+(define-read-only (get-symbol)
+  (ok "PEER")
+)
+
+(define-read-only (get-decimals)
+  (ok u6)
+)
+
+(define-read-only (get-token-uri (token-id uint))
+  (ok none)
 )
