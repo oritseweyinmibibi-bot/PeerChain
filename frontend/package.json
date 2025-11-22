@@ -1,0 +1,21 @@
+{
+  "name": "peerchain-frontend",
+  "version": "1.0.0",
+  "description": "PeerChain - Decentralized Research Publication Network Frontend",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "keywords": ["stacks", "research", "publications", "peer-review", "blockchain", "academic"],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/react": "^19.2.6",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^5.1.1",
+    "typescript": "^5.9.3",
+    "vite": "^7.2.4"
+  }
+}
